@@ -1,0 +1,83 @@
+<script setup>
+import { ref, watch, computed, onMounted } from 'vue'
+import { useLanguageStore } from '@/stores/language'
+import { RouterView } from 'vue-router'
+import Header from '@/components/Header.vue'
+import HeaderAIJBabies from '@/components/HeaderAIJBabies.vue'
+import FooterAIJBabies from '@/components/FooterAIJBabies.vue'
+import HeaderAIJBeginner from '@/components/HeaderAIJBeginner.vue'
+import FooterAIJBeginner from '@/components/FooterAIJBeginner.vue'
+import HeaderAIJPrimary from '@/components/HeaderAIJPrimary.vue'
+import FooterAIJPrimary from '@/components/FooterAIJPrimary.vue'
+import HeaderAIJKindergarten from '@/components/HeaderAIJKindergarten.vue'
+import FooterAIJKindergarten from '@/components/FooterAIJKindergarten.vue'
+import ChatBot from '@/components/ChatBot.vue'
+
+
+let dir = ref('auto')
+
+watch(() => useLanguageStore().code, function() {
+  directionCalc()
+});
+
+const directionCalc = function () {
+  let languageCode = useLanguageStore().locale.code
+  dir = ['ar', 'fa', 'he'].includes(languageCode) ? 'rtl' : 'auto'
+}
+
+const isAIJBabies = computed(() => {
+  return window.location.hostname.indexOf(import.meta.env.VITE_APP_AIJ_BABIES_HOST) === 0
+})
+
+const isAIJBeginner = computed(() => {
+  return window.location.hostname.indexOf(import.meta.env.VITE_APP_AIJ_BEGINNER_HOST) === 0
+})
+
+const isAIJPrimary = computed(() => {
+  return window.location.hostname.indexOf(import.meta.env.VITE_APP_AIJ_PRIMARY_HOST) === 0
+})
+
+const isAIJKindergarten = computed(() => {
+  return window.location.hostname.indexOf(import.meta.env.VITE_APP_AIJ_KINDERGARTEN_HOST) === 0
+})
+
+const changeFavicon = function (src) {
+  let link = document.querySelector("link[rel*='icon']") || document.createElement('link')
+  link.rel = 'icon'
+  link.href = src
+  document.getElementsByTagName('head')[0].appendChild(link)
+}
+
+onMounted(() => {
+  let iconSource = '/assets/logo.png'
+
+  if (isAIJBabies.value || isAIJBeginner.value || isAIJPrimary.value || isAIJKindergarten.value) {
+    iconSource = '/assets/aij-favicon.ico'
+  }
+
+  changeFavicon(iconSource)
+})
+
+directionCalc()
+</script>
+
+<template>
+  <div :dir="dir" :class="{'aij-theme': isAIJBabies || isAIJBeginner || isAIJPrimary || isAIJKindergarten}">
+    <div>
+      <HeaderAIJBabies v-if="isAIJBabies" />
+      <HeaderAIJBeginner v-else-if="isAIJBeginner" />
+      <HeaderAIJPrimary v-else-if="isAIJPrimary" />
+      <HeaderAIJKindergarten v-else-if="isAIJKindergarten" />
+      <Header v-else />
+    </div>
+    <div class="container pt-5 mx-auto px-5 lg:px-24">
+      <RouterView :key="$route.fullPath" />
+    </div>
+    <FooterAIJBabies  v-if="isAIJBabies" />
+    <FooterAIJBeginner  v-if="isAIJBeginner" />
+    <FooterAIJPrimary  v-if="isAIJPrimary" />
+    <FooterAIJKindergarten  v-if="isAIJKindergarten" />
+    <ChatBot />
+   
+  </div>
+</template>

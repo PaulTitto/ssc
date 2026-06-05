@@ -1,0 +1,46 @@
+name: deploy
+on:
+  push:
+    branches:
+      - master
+      - stage
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+          check-latest: true
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+      - run: yarn
+      - run: npx vite build `[[ "${{ steps.extract_branch.outputs.branch }}" = "stage" ]] && echo '--mode stage'`
+      - name: Deploy
+        run: aws s3 cp dist/ s3://sabbath-school`[[ "${{ steps.extract_branch.outputs.branch }}" = "stage" ]] && echo '-stage'`.adventech.io --acl "public-read" --region us-east-1 --no-progress --recursive
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      - name: Invalidation
+        if: github.ref == 'refs/heads/stage'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.SSPM_CLOUDFRONT_DISTRIBUTION_ID_STAGE }} --paths "/*" | > /dev/null
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.AIJ_CLOUDFRONT_DISTRIBUTION_ID_STAGE }} --paths "/*" | > /dev/null
+      - name: Invalidation
+        if: github.ref == 'refs/heads/master'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.SSPM_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*" | > /dev/null
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.AIJ_CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*" | > /dev/null
