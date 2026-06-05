@@ -11,3 +11,5 @@ npm run dev
 ```sh
 npm run build
 ```
+
+# This is Cloning from https://github.com/Adventech/sabbath-school-web
