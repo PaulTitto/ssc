@@ -156,7 +156,7 @@ const parseDocId = (docId) => {
       `📖 Mg ${parseInt(week)} · Hr ${parseInt(day)}`,
 
     webUrl:
-      `https://satulima.web.id/in/${quarterlyId}/${week}/${day}`
+      `https://ss.developedbytoo.me/in/${quarterlyId}/${week}/${day}`
   }
 }
 
@@ -203,90 +203,88 @@ const scrollBottom = async () => {
 
 const sendQuestion = async () => {
 
-  if (
-    !question.value.trim() ||
-    isStreaming.value
-  ) return
+if (
+  !question.value.trim() ||
+  isStreaming.value
+) return
 
-  const q = question.value
+const q = question.value
 
-  question.value = ''
+question.value = ''
 
-  isStreaming.value = true
+isStreaming.value = true
 
-  messages.value.push({
-    role: 'user',
-    text: q
-  })
+messages.value.push({
+  role: 'user',
+  text: q
+})
 
-  messages.value.push({
-    role: 'bot',
-    text: ''
-  })
+messages.value.push({
+  role: 'bot',
+  text: ''
+})
 
-  const botIndex =
-    messages.value.length - 1
+const botIndex = messages.value.length - 1
 
-  scrollBottom()
+scrollBottom()
 
-  try {
+try {
 
-    const resp = await fetch(
-      API + '/ask',
-      {
-        method: 'POST',
+  const resp = await fetch(
+    API + '/ask',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        question: q
+      })
+    }
+  )
 
-        headers: {
-          'Content-Type':
-            'application/json'
-        },
+  const reader = resp.body.getReader()
+  const decoder = new TextDecoder()
 
-        body: JSON.stringify({
-          question: q
-        })
-      }
-    )
+  let fullText = ''
+  let buffer = ''
 
-    const reader =
-      resp.body.getReader()
+  while (true) {
 
-    const decoder =
-      new TextDecoder()
+    const { done, value } = await reader.read()
 
-    let fullText = ''
+    if (done) break
 
-    while (true) {
+    buffer += decoder.decode(value, { stream: true })
 
-      const {
-        done,
-        value
-      } = await reader.read()
+    const lines = buffer.split('\n')
+    buffer = lines.pop() // baris terakhir mungkin belum lengkap
 
-      if (done) break
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue
 
-      fullText += decoder.decode(
-        value,
-        { stream: true }
-      )
+      const chunk = line.slice(6)
 
-      messages.value[botIndex].text =
-        injectCitations(
-          marked.parse(fullText)
-        )
+      if (chunk === '[DONE]') break
 
-      scrollBottom()
+      fullText += chunk
     }
 
-  } catch {
-
     messages.value[botIndex].text =
-      'Gagal terhubung ke server.'
+      injectCitations(marked.parse(fullText))
+
+    scrollBottom()
   }
 
-  finally {
+} catch {
 
-    isStreaming.value = false
-  }
+  messages.value[botIndex].text =
+    'Gagal terhubung ke server.'
+
+} finally {
+
+  isStreaming.value = false
+}
 }
 
 /* =========================

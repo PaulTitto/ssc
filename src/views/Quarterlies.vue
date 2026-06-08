@@ -61,7 +61,9 @@ export default {
       this.loading = true
 
       const quarterlies = await this.$api.get(`${this.$route.params.lang}/quarterlies/index.json`)
-      this.quarterlies = quarterlies.data
+      this.quarterlies = quarterlies.data.filter( 
+        q => q.id >= '2026-02'
+      )
 
       let emptyGroup = []
       for (let quarterly of this.quarterlies) {

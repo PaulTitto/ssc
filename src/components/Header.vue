@@ -1,7 +1,7 @@
 <template>
   <div class="border-b">
     <header class="container mx-auto px-3 lg:px-24 mt-3 flex w-full justify-between py-2 md:py-4 items-center gap-1 md:gap-2">
-      <a href="https://www.sabbathschoolpersonalministries.org/" class="flex items-center flex-shrink-0">
+      <a href="https://ss.developedbytoo.me/in" class="flex items-center flex-shrink-0">
         <img class="w-9 h-9 mr-2 md:mr-3" src="/assets/logo.png" />
         <div>
           <p class="text-xs md:text-sm font-bold leading-tight">Sabbath School and</p>
@@ -11,11 +11,11 @@
 
       <div class="flex items-center gap-1 md:gap-2">
         <SabbathSchoolButton />
-        <AIJButton />
+        <!-- <AIJButton /> -->
 <!--      <PersonalMinistriesButton />-->
 <!--      <DevotionalsButton />-->
-        <LanguageButton />
-        <LoginButton />
+        <!-- <LanguageButton /> -->
+        <!-- <LoginButton /> -->
       </div>
     </header>
   </div>
